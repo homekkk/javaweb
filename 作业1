@@ -1,0 +1,108 @@
+1. 会话安全性
+会话劫持和防御
+会话劫持通常通过窃取用户的会话ID来实现。防御措施包括：
+使用HTTPS来加密通信
+设置HttpOnly和Secure标记的Cookie
+定期更换会话ID
+代码：
+	// 设置安全的Cookie（在Servlet中） 
+	Cookie sessionCookie = new Cookie("JSESSIONID", session.getId()); 
+	sessionCookie.setHttpOnly(true); // 防止JavaScript访问 
+	sessionCookie.setSecure(true); // 仅允许通过HTTPS传输 
+	response.addCookie(sessionCookie);
+跨站脚本攻击（XSS）和防御
+XSS攻击通过在输入字段中注入恶意脚本来攻击用户。防御措施包括：
+输入验证
+输出编码
+代码：
+ 
+	// 输出编码（在JSP中） 
+	<% 
+	String userInput = request.getParameter("userInput"); 
+	String encodedInput = ESAPI.encoder().encodeForHTML(userInput); 
+	%> 
+	<p>User Input: <%= encodedInput %></p>
+跨站请求伪造（CSRF）和防御
+CSRF攻击通过让用户在不知情的情况下发送请求来攻击。防御措施包括：
+使用CSRF Token
+验证请求的Origin或Referer头
+代码：
+ 
+	// 生成CSRF Token（在Servlet中） 
+	HttpSession session = request.getSession(); 
+	String csrfToken = UUID.randomUUID().toString(); 
+	session.setAttribute("csrfToken", csrfToken); 
+	
+	// 在表单中添加CSRF Token（在JSP中） 
+	<input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" /> 
+	
+	// 验证CSRF Token（在Servlet中） 
+	String sessionToken = (String) request.getSession().getAttribute("csrfToken"); 
+	String formToken = request.getParameter("csrfToken"); 
+	if (!sessionToken.equals(formToken)) { 
+	throw new CSRFException("Invalid CSRF token"); 
+	}
+2. 分布式会话管理
+分布式环境下的会话同步问题
+在分布式环境中，用户的请求可能被分发到不同的服务器上，因此需要同步会话状态。
+Session集群解决方案
+可以使用Session复制或Session持久化来解决。
+使用Redis等缓存技术实现分布式会话
+示例代码（使用Spring Session和Redis）：
+依赖配置（pom.xml）：
+xml 
+	<dependency> 
+	<groupId>org.springframework.session</groupId> 
+	<artifactId>spring-session-data-redis</artifactId> 
+	<version>2.5.0</version> 
+	</dependency> 
+	<dependency> 
+	<groupId>redis.clients</groupId> 
+	<artifactId>jedis</artifactId> 
+	<version>3.6.0</version> 
+	</dependency>
+Spring配置：
+ 
+	@Configuration 
+	@EnableRedisHttpSession 
+	public class HttpSessionConfig { 
+	@Bean 
+	public RedisHttpSessionConfiguration redisHttpSessionConfiguration() { 
+	RedisHttpSessionConfiguration config = new RedisHttpSessionConfiguration(); 
+	config.setMaxInactiveIntervalInSeconds(1800); // 会话超时时间 
+	return config; 
+	} 
+	
+	@Bean 
+	public RedisConnectionFactory redisConnectionFactory() { 
+	JedisConnectionFactory factory = new JedisConnectionFactory(); 
+	factory.setHostName("localhost"); 
+	factory.setPort(6379); 
+	return factory; 
+	} 
+	}
+3. 会话状态的序列化和反序列化
+会话状态的序列化和反序列化
+在分布式会话管理中，需要将会话状态对象序列化和反序列化以便存储和传输。
+为什么需要序列化会话状态
+HTTP会话是存储在服务器端的，为了在多个服务器之间共享会话状态，需要将会话对象序列化。
+Java对象序列化
+Java提供了java.io.Serializable接口来实现对象序列化。
+代码：
+	import java.io.Serializable; 
+	
+	public class UserSession implements Serializable { 
+	private static final long serialVersionUID = 1L; 
+	
+	private String username; 
+	private String email; ™
+	
+	// getters and setters 
+	} 
+	
+	// 在HttpSession中使用 
+	HttpSession session = request.getSession(); 
+	UserSession userSession = new UserSession(); 
+	userSession.setUsername("john"); 
+	userSession.setEmail("john@example.com");
+
