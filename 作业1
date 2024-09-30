@@ -43,7 +43,7 @@ CSRF攻击通过让用户在不知情的情况下发送请求来攻击。防御�
 	throw new CSRFException("Invalid CSRF token"); 
 	}
 2. 分布式会话管理
-分布式环境下的会话同步问题
+分布式环境下的会话同步问题.
 在分布式环境中，用户的请求可能被分发到不同的服务器上，因此需要同步会话状态。
 Session集群解决方案
 可以使用Session复制或Session持久化来解决。
