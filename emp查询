@@ -1,0 +1,104 @@
+#1. 查询所有员工的姓名、邮箱和工作岗位。--
+SELECT first_name, last_name,email, job_title FROM employees;
+
+#2. 查询所有部门的名称和位置。
+SELECT dept_name, location FROM departments;
+
+#3查询工资超过70000的员工姓名和工资。
+SELECT CONCAT(first_name, ' ', last_name) AS full_name, salary FROM employees WHERE salary > 70000;
+#4查询IT部门的所有员工。
+SELECT * FROM employees WHERE dept_id = (SELECT dept_id FROM departments WHERE dept_name = 'IT');
+
+#5查询入职日期在2020年之后的员工信息。
+SELECT * FROM employees WHERE hire_date > '2020-01-01';
+
+#6计算每个部门的平均工资。
+SELECT dept_id, AVG(salary) AS average_salary FROM employees GROUP BY dept_id;
+
+#7查询工资最高的前3名员工信息。
+SELECT * FROM employees ORDER BY salary DESC LIMIT 3;
+
+#8查询每个部门员工数量。
+SELECT dept_id, COUNT(*) AS employee_count FROM employees GROUP BY dept_id;
+
+#9查询没有分配部门的员工。
+SELECT * FROM employees WHERE dept_id IS NULL;
+
+#10查询参与项目数量最多的员工。
+SELECT emp_id, COUNT(project_id) AS project_count 
+FROM employee_projects 
+GROUP BY emp_id 
+ORDER BY project_count DESC 
+LIMIT 1;
+
+#11计算所有员工的工资总和。
+SELECT SUM(salary) AS total_salary FROM employees;
+
+#12查询姓"Smith"的员工信息。
+SELECT * FROM employees WHERE last_name = 'Smith';
+
+#13查询即将在半年内到期的项目。
+SELECT * FROM projects WHERE end_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 6 MONTH);
+
+#14查询至少参与了两个项目的员工。
+SELECT emp_id, COUNT(project_id) AS project_count 
+FROM employee_projects 
+GROUP BY emp_id 
+HAVING project_count >= 2;
+
+#15查询没有参与任何项目的员工。
+SELECT * FROM employees 
+WHERE emp_id NOT IN (SELECT DISTINCT emp_id FROM employee_projects);
+
+#16计算每个项目参与的员工数量。
+SELECT project_id, COUNT(emp_id) AS employee_count 
+FROM employee_projects 
+GROUP BY project_id;
+
+#17查询工资第二高的员工信息。
+SELECT * FROM employees 
+WHERE salary = (SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1);
+
+#18查询每个部门工资最高的员工。
+SELECT * FROM employees e1 
+WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e1.dept_id = e2.dept_id);
+
+#19计算每个部门的工资总和，并按照工资总和降序排列。
+SELECT dept_id, SUM(salary) AS total_salary 
+FROM employees 
+GROUP BY dept_id 
+ORDER BY total_salary DESC;
+
+#20查询员工姓名、部门名称和工资。
+SELECT CONCAT(e.first_name, ' ', e.last_name) AS full_name, d.dept_name, e.salary 
+FROM employees e 
+JOIN departments d ON e.dept_id = d.dept_id;
+
+#21查询每个员工的上级主管（假设emp_id小的是上级）。
+SELECT e1.first_name AS employee_name, e2.first_name AS supervisor_name 
+FROM employees e1 
+LEFT JOIN employees e2 ON e1.emp_id = e2.emp_id + 1; 
+
+#22查询所有员工的工作岗位，不要重复。
+SELECT DISTINCT job_title FROM employees;
+
+#23查询平均工资最高的部门。
+SELECT dept_id, AVG(salary) AS average_salary 
+FROM employees 
+GROUP BY dept_id 
+ORDER BY average_salary DESC 
+LIMIT 1;
+
+#24查询工资高于其所在部门平均工资的员工。
+SELECT e.* 
+FROM employees e 
+WHERE e.salary > (SELECT AVG(salary) FROM employees WHERE dept_id = e.dept_id);
+
+#25查询每个部门工资前两名的员工。
+SELECT * FROM (
+    SELECT e.*, 
+           ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rn 
+    FROM employees e
+) AS ranked 
+WHERE rn <= 2;
+
